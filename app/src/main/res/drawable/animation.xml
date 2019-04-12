@@ -1,0 +1,30 @@
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+    <item
+        android:drawable="@drawable/fish1"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish2"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish3"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish4"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish5"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish6"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish7"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish8"
+        android:duration="100" />
+    <item
+        android:drawable="@drawable/fish9"
+        android:duration="100" />
+</animation-list>
