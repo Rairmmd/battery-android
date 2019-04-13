@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager
+import com.rair.battery.constant.EventType
 import com.rair.battery.event.AppEvent
+import com.rair.battery.service.BatteryService
 import org.greenrobot.eventbus.EventBus
 
 /**
@@ -29,6 +31,7 @@ class BatteryStatusReceiver : BroadcastReceiver() {
                     } else if (mPlugType == BatteryManager.BATTERY_PLUGGED_USB) {
 
                     }
+                    context?.startService(Intent(context, BatteryService().javaClass))
                 }
                 BatteryManager.BATTERY_STATUS_FULL -> {
                     if (mPlugType == BatteryManager.BATTERY_PLUGGED_AC) {
@@ -38,21 +41,13 @@ class BatteryStatusReceiver : BroadcastReceiver() {
                     }
                 }
                 BatteryManager.BATTERY_STATUS_NOT_CHARGING -> {
-                    if (mPlugType == BatteryManager.BATTERY_PLUGGED_AC) {
 
-                    } else if (mPlugType == BatteryManager.BATTERY_PLUGGED_USB) {
-
-                    }
                 }
                 BatteryManager.BATTERY_STATUS_DISCHARGING -> {
-                    if (mPlugType == BatteryManager.BATTERY_PLUGGED_AC) {
-
-                    } else if (mPlugType == BatteryManager.BATTERY_PLUGGED_USB) {
-
-                    }
+                    context?.stopService(Intent(context, BatteryService().javaClass))
                 }
             }
-            EventBus.getDefault().post(AppEvent(mLevel))
+            EventBus.getDefault().post(AppEvent(EventType.TYPE_LEVEL, mLevel))
         }
     }
 }

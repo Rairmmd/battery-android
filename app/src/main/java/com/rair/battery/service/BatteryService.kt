@@ -1,5 +1,6 @@
 package com.rair.battery.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -18,6 +19,8 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import com.rair.battery.R
+import com.rair.battery.constant.Constants
+import kotlin.concurrent.timer
 
 /**
  * @author Rair
@@ -26,6 +29,7 @@ import com.rair.battery.R
  * desc:
  */
 class BatteryService : Service(), Handler.Callback {
+
     private val GO_HOME: Int = 1000
 
     private val GO_PREVIEW: Int = 1001
@@ -43,15 +47,14 @@ class BatteryService : Service(), Handler.Callback {
     private var mWindowParams: WindowManager.LayoutParams? = null
     private var mLinearLayout: LinearLayout? = null
 
-    private var mTotalData: Long = TrafficStats.getTotalRxBytes()
-
-    private var mTranferData: Long = TrafficStats.getTotalTxBytes()
     private var mHandler: Handler? = null
-
-    private var mCount: Int = 0
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createdFloatWindow()
+        mImages = mLinearLayout!!.findViewById(R.id.iv_image) as ImageView?
+        mAnimationDrawable = mImages!!.background as AnimationDrawable?
+        mAnimationDrawable!!.start()
+        mHandler = Handler(this)
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -77,23 +80,47 @@ class BatteryService : Service(), Handler.Callback {
         mLinearLayout = layoutInflater.inflate(R.layout.layout_float_view, LinearLayout(this), false) as LinearLayout?
         mWindowManager?.addView(mLinearLayout, mWindowParams)
         mLinearLayout?.setOnLongClickListener {
-            val sharedPreferences = getSharedPreferences("def", MODE_PRIVATE) as SharedPreferences
-            isFirstRun = sharedPreferences.getBoolean("isFirstRun", true)
+            val sharedPreferences =
+                    getSharedPreferences(Constants.DEFAULT_PREFERENCE, MODE_PRIVATE) as SharedPreferences
+            isFirstRun = sharedPreferences.getBoolean(Constants.IS_FIRSTRUN, true)
             if (!isFirstRun) {
                 mHandler?.sendEmptyMessageDelayed(GO_HOME, TIME)
+                val editor = sharedPreferences.edit()
+                editor?.putBoolean(Constants.IS_FIRSTRUN, true)
+                editor.apply()
+            } else {
+                mHandler?.sendEmptyMessageDelayed(GO_PREVIEW, TIME)
+                val editor = sharedPreferences.edit()
+                editor.putBoolean(Constants.IS_FIRSTRUN, false)
+                editor.apply()
             }
-            true
+            false
         }
         mLinearLayout?.measure(
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         )
-
-
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun handleMessage(msg: Message?): Boolean {
-        return true
+        when (msg?.what) {
+            GO_HOME -> {
+                mLinearLayout?.setOnTouchListener { v, event ->
+                    mWindowParams?.x = event.rawX.toInt()
+                    mWindowParams?.y = event.rawY.toInt()
+                    mWindowManager?.updateViewLayout(mLinearLayout, mWindowParams)
+                    false
+                }
+            }
+            GO_PREVIEW -> {
+                mLinearLayout?.setOnTouchListener { v, event ->
+                    mWindowManager?.updateViewLayout(mLinearLayout, mWindowParams)
+                    false
+                }
+            }
+        }
+        return false
     }
 
     override fun onDestroy() {
